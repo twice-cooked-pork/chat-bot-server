@@ -5,6 +5,6 @@ Sinatra使ってます
 ##  セットアップ
 
 ```shell
-$ gem install sinatra
+$ bundle install
 $ ruby main.rb
 ```
