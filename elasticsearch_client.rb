@@ -2,6 +2,8 @@ require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
 
 class ElasticsearchClient
+  attr_accessor :client
+
   INDEX = 'recipe'
   MAX_RECIPES_COUNT = 10
 
@@ -26,19 +28,19 @@ class ElasticsearchClient
   end
 
   def register_recipes(recipes)
-    p @client.bulk(
+    @client.bulk(
       body: recipes.map do |recipe|
         { index: { _index: INDEX, data: recipe } }
       end
     )
   end
 
-  def get_all_recipes
-    @client.search(
-      index: INDEX,
-      size: MAX_RECIPES_COUNT,
-      body: nil
-    )
+  def get_all
+    @client.search(index: INDEX, size: MAX_RECIPES_COUNT, body: nil)
+  end
+
+  def get_by_id(id)
+    @client.get(index: INDEX, id: id)
   end
 
   def search_by_materials(materials)
