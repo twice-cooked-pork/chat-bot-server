@@ -1,12 +1,57 @@
 require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
 
-def get_elasticsearch_client
-  Elasticsearch::Client.new(url: ENV['AWS_ELASTIC_SEARCH_HOST']) do |f|
-    f.request :aws_sigv4,
-      service: 'es',
-      region: ENV['AWS_REGION'],
-      access_key_id: ENV['AWS_ACCESS_KEY_ID'],
-      secret_access_key: ENV['AWS_SECRET_ACCESS_KEY']
+class ElasticsearchClient
+  INDEX = 'recipe'
+  MAX_RECIPES_COUNT = 10
+
+  def initialize
+    config = {
+      host: ENV.fetch('AWS_ELASTIC_SEARCH_HOST'),
+      port: 443,
+      scheme: 'https',
+      retry_on_failure: true,
+      transport_options: {
+        request: { timeout: 10 }
+      }
+    }
+
+    @client = Elasticsearch::Client.new(config) do |f|
+      f.request :aws_sigv4,
+        service: 'es',
+        region: ENV.fetch('AWS_REGION'),
+        access_key_id: ENV.fetch('AWS_ACCESS_KEY_ID'),
+        secret_access_key: ENV.fetch('AWS_SECRET_ACCESS_KEY')
+    end
+  end
+
+  def register_recipes(recipes)
+    p @client.bulk(
+      body: recipes.map do |recipe|
+        { index: { _index: INDEX, data: recipe } }
+      end
+    )
+  end
+
+  def get_all_recipes
+    @client.search(
+      index: INDEX,
+      size: MAX_RECIPES_COUNT,
+      body: nil
+    )
+  end
+
+  def search_by_materials(materials)
+    @client.search(
+      index: INDEX,
+      size: MAX_RECIPES_COUNT,
+      body: {
+        query: {
+          match: {
+            recipeMaterial: materials.join(' ')
+          }
+        }
+      }
+    )
   end
 end

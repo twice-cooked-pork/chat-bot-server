@@ -88,9 +88,5 @@ if __FILE__ == $0
   recipes = grd.get_all_recipes(ids_hash)
 
   # 取得したデータをElasticsearchに登録する
-  get_elasticsearch_client.bulk(
-    body: recipes.map do |recipe|
-      { index: { _index: 'recipe', data: recipe } }
-    end
-  )
+  ElasticsearchClient.new.register_recipes(recipes)
 end
