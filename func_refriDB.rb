@@ -1,4 +1,7 @@
-require "google/cloud/firestore"
+require 'google/cloud/firestore'
+require 'sinatra'
+require 'json'
+require './elasticsearch_client'
 
 # 文字分割
 def strsplit(str)
@@ -101,3 +104,16 @@ end
 firestore = Google::Cloud::Firestore.new project_id: project_id
 refri_col = firestore.col "refrigerator"
 shopping_bag = "たまご ,    　にんじん トマト,りんご:玉ねぎ;小麦粉/米、もち。白玉" #例文
+
+get '/' do
+    # 材料について牛乳でOR検索した結果を返す
+    groc = get_from_refri(input_list, refri_col)
+    
+    if groc.size == 3
+        result = client.search_by_materials([groc[1]])
+    elsif groc.size == 2
+        result = client.search_by_materials([groc[1],groc[2]])
+    end
+
+    result['hits']['hits']['recipeMaterial'].to_json
+end
