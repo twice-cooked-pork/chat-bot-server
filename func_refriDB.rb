@@ -79,5 +79,6 @@ def get_from_refri(input_list, refri_col)
     return res
 end
 
+firestore = Google::Cloud::Firestore.new project_id: project_id
 refri_col = firestore.col "refrigerator"
 shopping_bag = "たまご ,    　にんじん トマト,りんご:玉ねぎ;小麦粉/米、もち。白玉" #例文
