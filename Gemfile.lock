@@ -4,6 +4,7 @@ GEM
     addressable (2.7.0)
       public_suffix (>= 2.0.2, < 5.0)
     concurrent-ruby (1.1.6)
+    dotenv (2.7.6)
     faraday (1.0.1)
       multipart-post (>= 1.2, < 3)
     google-cloud-core (1.5.0)
@@ -43,6 +44,7 @@ GEM
       google-protobuf (~> 3.12)
       googleapis-common-protos-types (~> 1.0)
     jwt (2.2.1)
+    line-bot-api (1.14.1)
     memoist (0.16.2)
     multi_json (1.15.0)
     multipart-post (2.1.1)
@@ -72,7 +74,9 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  dotenv
   google-cloud-firestore
+  line-bot-api
   sinatra
 
 BUNDLED WITH

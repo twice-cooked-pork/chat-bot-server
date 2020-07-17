@@ -7,3 +7,5 @@ end
 
 gem 'sinatra'
 gem 'google-cloud-firestore'
+gem 'line-bot-api'
+gem 'dotenv'
