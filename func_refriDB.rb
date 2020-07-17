@@ -1,5 +1,4 @@
 require "google/cloud/firestore"
-require "elasticsearch"
 
 # 文字分割
 def strsplit(str)
@@ -61,7 +60,7 @@ def get_from_refri(input_list, refri_col)
     n = refri_list.size
     if n then
         if grocery.size then #食材を指定している場合
-            snapshot = refri_col.get.where("name","=",grocery[0])
+            snapshot = refri_col.where("name","=",grocery[0]).get
             if snapshot.exists? then
                 res << 1 #食材が見つかったとき(この数字はArray.delete(Array.first)で消去する)
                 res << grocery[0]
@@ -81,9 +80,24 @@ def get_from_refri(input_list, refri_col)
     return res
 end
 
+# 食材があるかを確認する
+def check_from_refri(input_list, refri_col)
+    grocery = strsplit(input_list) # 必要な食材のリスト
+    res = []
+
+    n = grocery.size
+    grocery.each{|food|
+        snapshot = refri_col.orderBy("name").startAt(food).endAt(food + '\uf8ff').get
+        if snapshot.exists?
+            res << 1
+        else
+            res << 0
+        end
+    }
+
+    return res
+end
+
 firestore = Google::Cloud::Firestore.new project_id: project_id
 refri_col = firestore.col "refrigerator"
 shopping_bag = "たまご ,    　にんじん トマト,りんご:玉ねぎ;小麦粉/米、もち。白玉" #例文
-
-client = Elasticsearch::Client.new url: 'http://example.com:9900', log: true #urlは適切に変える
-client.search(index: 'japanese', type: 'books', body: {query: {match: {text: '極楽'}}})
