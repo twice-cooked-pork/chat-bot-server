@@ -7,3 +7,5 @@ end
 
 gem 'sinatra'
 gem 'google-cloud-firestore'
+gem 'elasticsearch'
+gem 'faraday_middleware-aws-sigv4'

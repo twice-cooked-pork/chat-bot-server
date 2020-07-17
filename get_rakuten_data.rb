@@ -1,5 +1,7 @@
 require "net/http"
 require "json"
+require 'elasticsearch'
+require 'faraday_middleware/aws_sigv4'
 
 class Get_rakuten_data
   DEBUG = true
@@ -50,7 +52,8 @@ class Get_rakuten_data
 
   #return hash
   def make_ids_hash(categories)
-    large_categories = categories["large"]
+    # 全て入れると無料枠を突破しそうなので
+    large_categories = categories["large"].sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'] || 1)
     medium_categories = categories["medium"]
     small_categories = categories["small"]
     ids_hash = {}
@@ -83,5 +86,20 @@ if __FILE__ == $0
   grd = Get_rakuten_data.new
   categories = grd.load_categories
   ids_hash = grd.make_ids_hash(categories)
-  grd.get_all_recipes(ids_hash)
+  recipes = grd.get_all_recipes(ids_hash)
+
+  # 取得したデータをElasticsearchに登録する
+  client = Elasticsearch::Client.new(url: "#{ENV.fetch('AWS_ELASTIC_SEARCH_HOST')}:443") do |f|
+    f.request :aws_sigv4,
+      service: 'es',
+      region: ENV.fetch('AWS_REGION'),
+      access_key_id: ENV.fetch('AWS_ACCESS_KEY_ID'),
+      secret_access_key: ENV.fetch('AWS_SECRET_ACCESS_KEY')
+  end
+
+  client.bulk(
+    body: recipes.map do |recipe|
+      { index: { _index: INDEX, data: recipe } }
+    end
+  )
 end
