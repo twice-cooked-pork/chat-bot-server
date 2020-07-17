@@ -1,4 +1,5 @@
 require "google/cloud/firestore"
+require "elasticsearch"
 
 # 文字分割
 def strsplit(str)
@@ -70,6 +71,7 @@ def get_from_refri(input_list, refri_col)
                 res << make_groc_list(refri_list,2)
             end
         else #指定していないとき
+            res << 1 #とりあえずOK用
             res << make_groc_list(refri_list,2)
         end
     else
@@ -82,3 +84,6 @@ end
 firestore = Google::Cloud::Firestore.new project_id: project_id
 refri_col = firestore.col "refrigerator"
 shopping_bag = "たまご ,    　にんじん トマト,りんご:玉ねぎ;小麦粉/米、もち。白玉" #例文
+
+client = Elasticsearch::Client.new url: 'http://example.com:9900', log: true #urlは適切に変える
+client.search(index: 'japanese', type: 'books', body: {query: {match: {text: '極楽'}}})
