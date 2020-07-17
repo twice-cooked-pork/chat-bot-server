@@ -25,9 +25,11 @@ post '/callback' do
       if event.type === Line::Bot::Event::MessageType::Text
         getText = event.message['text']
         if getText === '追加'
-            response = '食材の追加だね。「たまねぎ 2、ピーマン 3」みたいに入力してね'
+            response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
         elsif getText === 'レシピ'
             response = '今日のレシピは回鍋肉にしよう'
+        elsif getText === '削除'
+            response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
         elsif getText === '在庫'
             response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
         else response = getText
