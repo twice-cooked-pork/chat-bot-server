@@ -15,6 +15,7 @@ GEM
     elasticsearch-transport (7.8.0)
       faraday (~> 1)
       multi_json
+    dotenv (2.7.6)
     faraday (1.0.1)
       multipart-post (>= 1.2, < 3)
     faraday_middleware-aws-sigv4 (0.3.0)
@@ -57,6 +58,7 @@ GEM
       google-protobuf (~> 3.12)
       googleapis-common-protos-types (~> 1.0)
     jwt (2.2.1)
+    line-bot-api (1.14.1)
     memoist (0.16.2)
     multi_json (1.15.0)
     multipart-post (2.1.1)
@@ -86,9 +88,14 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+<<<<<<< HEAD
   elasticsearch
   faraday_middleware-aws-sigv4
+=======
+  dotenv
+>>>>>>> a056cd4ec1317c7c987bf8e33150f563df556e34
   google-cloud-firestore
+  line-bot-api
   sinatra
 
 BUNDLED WITH

@@ -1,6 +1,8 @@
 require 'sinatra'
 require 'json'
 require './elasticsearch_client'
+require './linebot'
+require "./get_from_rakuten"
 
 get '/' do
   # 材料について牛乳でOR検索した結果を返す
