@@ -2,12 +2,11 @@ require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
 
 class ElasticsearchClient
-  attr_accessor :client
-
-  INDEX = 'recipe'
   MAX_RECIPES_COUNT = 10
 
-  def initialize
+  def initialize(index)
+    @index = index
+
     config = {
       host: ENV.fetch('AWS_ELASTIC_SEARCH_HOST'),
       port: 443,
@@ -27,25 +26,17 @@ class ElasticsearchClient
     end
   end
 
-  def register_recipes(recipes)
-    @client.bulk(
-      body: recipes.map do |recipe|
-        { index: { _index: INDEX, data: recipe } }
-      end
-    )
-  end
-
   def get_all
-    @client.search(index: INDEX, size: MAX_RECIPES_COUNT, body: nil)
+    @client.search(index: @index, size: MAX_RECIPES_COUNT, body: nil)
   end
 
   def get_by_id(id)
-    @client.get(index: INDEX, id: id)
+    @client.get(index: @index, id: id)
   end
 
   def search_by_materials(materials)
     @client.search(
-      index: INDEX,
+      index: @index,
       size: MAX_RECIPES_COUNT,
       body: {
         query: {
