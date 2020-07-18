@@ -2,9 +2,10 @@ require 'sinatra'
 require 'line/bot'
 require 'dotenv'
 require './watson_client'
+
 Dotenv.load
 
-def client
+def line_client
   @client ||= Line::Bot::Client.new do |config|
     config.channel_id = ENV.fetch('LINE_CHANNEL_ID')
     config.channel_secret = ENV.fetch('LINE_CHANNEL_SECRET')
@@ -16,11 +17,11 @@ post '/callback' do
   body = request.body.read
 
   signature = request.env['HTTP_X_LINE_SIGNATURE']
-  unless client.validate_signature(body, signature)
+  unless line_client.validate_signature(body, signature)
     error 400 do 'Bad Request' end
   end
 
-  events = client.parse_events_from(body)
+  events = line_client.parse_events_from(body)
   events.each do |event|
     next unless event.is_a?(Line::Bot::Event::Message)
     next unless event.type == Line::Bot::Event::MessageType::Text
@@ -46,7 +47,7 @@ post '/callback' do
       type: 'text',
       text: response
     }
-    client.reply_message(event['replyToken'], message)
+    line_client.reply_message(event['replyToken'], message)
   end
 
   'OK'
