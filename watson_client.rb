@@ -1,10 +1,10 @@
-require 'json'
+require 'google/cloud/firestore'
 require 'ibm_watson/authenticators'
 require 'ibm_watson/assistant_v2'
 Dotenv.load
 
 class WatsonClient
-  def initialize(session_id = nil)
+  def initialize(user_id:)
     authenticator = IBMWatson::Authenticators::IamAuthenticator.new(
       apikey: ENV.fetch('WATSON_API_KEY')
     )
@@ -17,9 +17,18 @@ class WatsonClient
 
     @assistant_id = ENV.fetch('WATSON_ASSISTANT_ID')
 
-    @session_id = session_id || @service.create_session(
-      assistant_id: @assistant_id
-    ).result['session_id']
+    firestore = Google::Cloud::Firestore.new project_id: ENV.fetch('GOOGLE_PROJECT_ID')
+    doc = firestore.doc("sessions/#{user_id}")
+
+    unless doc.get.fields
+      session_id = @service.create_session(
+        assistant_id: @assistant_id
+      ).result['session_id']
+      p session_id
+      doc.set(session_id: session_id)
+    end
+
+    @session_id = doc.get.fields[:session_id]
   end
 
   def send_message(message)

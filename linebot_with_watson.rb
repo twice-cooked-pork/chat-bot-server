@@ -28,7 +28,7 @@ post '/callback' do
     next unless event.is_a?(Line::Bot::Event::Message)
     next unless event.type == Line::Bot::Event::MessageType::Text
 
-    result = WatsonClient.new.send_message(event.message['text'])
+    result = WatsonClient.new(user_id: event['source']['userId']).send_message(event.message['text'])
 
     # result[:mode]でどの問合せかを判断
     # result[:input]が存在する場合はユーザからその後のメッセージがあった場合
