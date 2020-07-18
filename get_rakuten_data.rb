@@ -2,6 +2,8 @@ require "net/http"
 require "json"
 require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
+require 'dotenv'
+Dotenv.load
 
 class Get_rakuten_data
   DEBUG = true
@@ -89,7 +91,16 @@ if __FILE__ == $0
   recipes = grd.get_all_recipes(ids_hash)
 
   # 取得したデータをElasticsearchに登録する
-  client = Elasticsearch::Client.new(url: "#{ENV.fetch('AWS_ELASTIC_SEARCH_HOST')}:443") do |f|
+  config = {
+    host: ENV.fetch('AWS_ELASTIC_SEARCH_HOST'),
+    port: 443,
+    scheme: 'https',
+    retry_on_failure: true,
+    transport_options: {
+      request: { timeout: 10 }
+    }
+  }
+  client = Elasticsearch::Client.new(config) do |f|
     f.request :aws_sigv4,
       service: 'es',
       region: ENV.fetch('AWS_REGION'),
@@ -99,7 +110,7 @@ if __FILE__ == $0
 
   client.bulk(
     body: recipes.map do |recipe|
-      { index: { _index: INDEX, data: recipe } }
+      { index: { _index: 'recipe', data: recipe } }
     end
   )
 end
