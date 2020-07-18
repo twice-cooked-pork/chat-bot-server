@@ -97,8 +97,8 @@ if __FILE__ == $0
     scheme: 'https',
     retry_on_failure: true,
     transport_options: {
-      request: { timeout: 10 },
-    },
+      request: { timeout: 10 }
+    }
   }
   client = Elasticsearch::Client.new(config) do |f|
     f.request :aws_sigv4,
@@ -111,6 +111,6 @@ if __FILE__ == $0
   client.bulk(
     body: recipes.map do |recipe|
       { index: { _index: 'recipe', data: recipe } }
-    end,
+    end
   )
 end
