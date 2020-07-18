@@ -14,12 +14,10 @@ end
 
 post '/callback' do
   body = request.body.read
-
   signature = request.env['HTTP_X_LINE_SIGNATURE']
   unless line_client.validate_signature(body, signature)
     error 400 do 'Bad Request' end
   end
-
   events = line_client.parse_events_from(body)
   events.each do |event|
     if event.is_a?(Line::Bot::Event::Message)
@@ -27,17 +25,29 @@ post '/callback' do
         getText = event.message['text']
         if getText === '追加'
           response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
+          message = {
+            type: 'text',
+            text: response,
+          }
         elsif getText === 'レシピ'
-          response = '今日のレシピは回鍋肉にしよう'
+          message = create_sending_recipe_to_line
         elsif getText === '削除'
           response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
+          message = {
+            type: 'text',
+            text: response,
+          }
         elsif getText === '在庫'
           response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
-        else response = getText         end
-        message = {
+          message = {
+            type: 'text',
+            text: response,
+          }
+        else response = getText
+          message ||= {
           type: 'text',
           text: response,
-        }
+        }         end
         line_client.reply_message(event['replyToken'], message)
       end
     end
@@ -45,7 +55,6 @@ post '/callback' do
 
   'OK'
 end
-
 helpers do
   def client
     @client ||= ElasticsearchClient.new 'recipe'
@@ -57,5 +66,38 @@ helpers do
       config.channel_secret = ENV['LINE_CHANNEL_SECRET']
       config.channel_token = ENV['LINE_CHANNEL_TOKEN']
     }
+  end
+
+  # ハードコーディング
+  def create_sending_recipe_to_line
+    # refri_list = get_all_grocery
+    # recipes = search_by_materials(refri_list)
+    sample_columns = []
+    File.open('sample_recipe.json') do |file|
+      recipe_list = JSON.load(file)
+      sample_columns = recipe_list['result']
+    end
+
+    columns = []
+    # recipes["hit"]["hit"].each do |column|
+    sample_columns.each do |column|
+      columns << {
+        "imageUrl": "#{column['foodImageUrl']}",
+        "action": {
+          "type": 'uri',
+          "label": 'レシピを見る',
+          "uri": "#{column['recipeUrl']}",
+        },
+      }
+    end
+    message = {
+      type: 'template',
+      "altText": '楽天レシピからの画像です。',
+      "template": {
+        "type": 'image_carousel',
+        "columns": columns,
+      },
+    }
+    message
   end
 end
