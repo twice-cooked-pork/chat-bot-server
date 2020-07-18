@@ -11,7 +11,7 @@ def client
   }
 end
 
-def create_sending_recepe_to_line
+def create_sending_recipe_to_line
   refri_list = get_all_grocery
   recipes = search_by_materials(refri_list)
   columns = []
@@ -51,7 +51,7 @@ post "/callback" do
         if getText === "追加"
           response = "食材の追加だね。「たまねぎ ピーマン」みたいに入力してね"
         elsif getText === "レシピ"
-          create_sending_recepe_to_line
+          create_sending_recipe_to_line
         elsif getText === "削除"
           response = "どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね"
           message = {
