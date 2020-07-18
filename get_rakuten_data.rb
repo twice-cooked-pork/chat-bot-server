@@ -1,5 +1,5 @@
-require "net/http"
-require "json"
+require 'net/http'
+require 'json'
 require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
 require 'dotenv'
@@ -8,7 +8,7 @@ Dotenv.load
 class Get_rakuten_data
   DEBUG = true
   Sleep_time = 0.3
-  Application_ID = "1038057614600903965"
+  Application_ID = '1038057614600903965'
 
   #return : array
   def get_recipes_by_category_id(category_id)
@@ -17,8 +17,8 @@ class Get_rakuten_data
     response = Net::HTTP.get_response(uri)
     sleep Sleep_time
     rawdata = JSON.parse(response.body)
-    if rawdata["error"].nil?
-      data = rawdata["result"]
+    if rawdata['error'].nil?
+      data = rawdata['result']
       # pp data if DEBUG
       data
     end
@@ -46,30 +46,30 @@ class Get_rakuten_data
 
   #return hash
   def load_categories
-    File.open("categoryList.json") do |j|
+    File.open('categoryList.json') do |j|
       category_list = JSON.load(j)
-      category_list["result"]
+      category_list['result']
     end
   end
 
   #return hash
   def make_ids_hash(categories)
     # 全て入れると無料枠を突破しそうなので
-    large_categories = categories["large"].sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'] || 1)
-    medium_categories = categories["medium"]
-    small_categories = categories["small"]
+    large_categories = categories['large'].sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'] || 1)
+    medium_categories = categories['medium']
+    small_categories = categories['small']
     ids_hash = {}
 
     large_categories.each do |large_category|
-      large_id = large_category["categoryId"].to_i
+      large_id = large_category['categoryId'].to_i
       medium_array = []
       medium_categories.each do |medium_category|
-        if medium_category["parentCategoryId"].to_i == large_id
-          medium_id = medium_category["categoryId"]
+        if medium_category['parentCategoryId'].to_i == large_id
+          medium_id = medium_category['categoryId']
           small_array = []
           small_categories.each do |small_category|
-            if small_category["parentCategoryId"].to_i == medium_id
-              small_array << small_category["categoryId"]
+            if small_category['parentCategoryId'].to_i == medium_id
+              small_array << small_category['categoryId']
             end
           end
           medium_hash = {}
@@ -97,8 +97,8 @@ if __FILE__ == $0
     scheme: 'https',
     retry_on_failure: true,
     transport_options: {
-      request: { timeout: 10 }
-    }
+      request: { timeout: 10 },
+    },
   }
   client = Elasticsearch::Client.new(config) do |f|
     f.request :aws_sigv4,
@@ -111,6 +111,6 @@ if __FILE__ == $0
   client.bulk(
     body: recipes.map do |recipe|
       { index: { _index: 'recipe', data: recipe } }
-    end
+    end,
   )
 end
