@@ -11,7 +11,6 @@ def add_materials(input)
   firestore = Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
   refri_col = firestore.col "refrigerator"
   add_to_refri(input, refri_col)
-
   "#{input}を追加するね"
 end
 
@@ -26,7 +25,7 @@ end
 def check_materials()
   firestore = Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
   refri_col = firestore.col "refrigerator"
-  "#{get_all_grocery(refri_col)}"
+  "#{get_all_grocery(refri_col).join("\n")}"
 end
 
 post '/callback' do
