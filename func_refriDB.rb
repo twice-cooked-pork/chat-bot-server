@@ -2,6 +2,7 @@ require 'google/cloud/firestore'
 require 'sinatra'
 require 'json'
 require './elasticsearch_client'
+Dotenv.load
 
 # 文字分割
 def strsplit(str)
@@ -45,7 +46,9 @@ def make_groc_list(refri_list, num)
         if amount>=2 then
             res << refri_list[idx]
             num -= 1
-            if !num break
+            if !num 
+                break
+            end
         else
             res << refri_list[idx]
             break
@@ -101,7 +104,7 @@ def check_from_refri(input_list, refri_col)
     return res
 end
 
-firestore = Google::Cloud::Firestore.new project_id: project_id
+firestore = Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
 refri_col = firestore.col "refrigerator"
 shopping_bag = "たまご ,    　にんじん トマト,りんご:玉ねぎ;小麦粉/米、もち。白玉" #例文
 
