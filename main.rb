@@ -71,22 +71,16 @@ helpers do
   # ハードコーディング
   def create_sending_recipe_to_line
     # refri_list = get_all_grocery
-    # recipes = search_by_materials(refri_list)
-    sample_columns = []
-    File.open('sample_recipe.json') do |file|
-      recipe_list = JSON.load(file)
-      sample_columns = recipe_list['result']
-    end
-
+    refri_list = ['牛乳', 'バター']
+    recipes = client.search_by_materials(refri_list)
     columns = []
-    # recipes["hit"]["hit"].each do |column|
-    sample_columns.each do |column|
+    recipes['hits']['hits'].each do |column|
       columns << {
-        "imageUrl": "#{column['foodImageUrl']}",
+        "imageUrl": "#{column['_source']['foodImageUrl']}",
         "action": {
           "type": 'uri',
           "label": 'レシピを見る',
-          "uri": "#{column['recipeUrl']}",
+          "uri": "#{column['_source']['recipeUrl']}",
         },
       }
     end
