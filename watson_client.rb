@@ -6,20 +6,20 @@ Dotenv.load
 class WatsonClient
   def initialize(user_id:)
     authenticator = IBMWatson::Authenticators::IamAuthenticator.new(
-      apikey: ENV.fetch('WATSON_API_KEY')
+      apikey: ENV.fetch('WATSON_API_KEY'),
     )
     firestore = Google::Cloud::Firestore.new project_id: ENV.fetch('GOOGLE_PROJECT_ID')
     @session_doc = firestore.doc("sessions/#{user_id}")
 
     @service = IBMWatson::AssistantV2.new(
       authenticator: authenticator,
-      version: '2018-09-17'
+      version: '2018-09-17',
     )
     @service.service_url = ENV.fetch('WATSON_SERVICE_URL')
 
     @assistant_id = ENV.fetch('WATSON_ASSISTANT_ID')
 
-    store_seession_id unless @session_doc.get.fields
+    store_session_id unless @session_doc.get.fields
 
     @session_id = @session_doc.get.fields[:session_id]
   end
@@ -29,7 +29,7 @@ class WatsonClient
       response = @service.message(
         assistant_id: @assistant_id,
         session_id: @session_id,
-        input: { 'text' => message }
+        input: { 'text' => message },
       )
     rescue IBMCloudSdkCore::ApiException
       store_session_id
@@ -47,7 +47,7 @@ class WatsonClient
 
   def store_session_id
     session_id = @service.create_session(
-      assistant_id: @assistant_id
+      assistant_id: @assistant_id,
     ).result['session_id']
 
     @session_doc.set(session_id: session_id)
