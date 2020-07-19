@@ -2,7 +2,7 @@ require 'sinatra'
 require 'line/bot'
 require 'dotenv'
 require './func_refriDB'
-require "google/cloud/firestore"
+require 'google/cloud/firestore'
 require './watson_client'
 
 Dotenv.load
@@ -48,7 +48,7 @@ post '/callback' do
       response = delete_materials(result[:input]) if result[:input]
     when 'search_recipes'
       response = '今日のレシピは回鍋肉にしよう'
-      response = search_materials(result[:input]) if result[:input]
+      response = search_recipes(result[:input]) if result[:input]
     when 'list_materials'
       # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       response = list_materials()
@@ -60,7 +60,7 @@ post '/callback' do
 
     message = {
       type: 'text',
-      text: response
+      text: response,
     }
     line_client.reply_message(event['replyToken'], message)
   end
