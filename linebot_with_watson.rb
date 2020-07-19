@@ -1,11 +1,14 @@
 require 'sinatra'
 require 'line/bot'
 require 'dotenv'
+require './func_refriDB'
+require "google/cloud/firestore"
 require './watson_client'
 
 Dotenv.load
 
 def add_materials(input)
+  add_to_refri(input, refri_col)
   "#{input}を追加するね"
 end
 
@@ -15,6 +18,10 @@ end
 
 def search_recipes(input)
   "#{input}で検索するね"
+end
+
+def list_materials()
+  "今の冷蔵庫の中はこれだよ\n\n#{get_all_grocery(refri_col).join("\n")}"
 end
 
 post '/callback' do
@@ -43,7 +50,8 @@ post '/callback' do
       response = '今日のレシピは回鍋肉にしよう'
       response = search_materials(result[:input]) if result[:input]
     when 'list_materials'
-      response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
+      # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
+      response = list_materials()
     when 'check_materials'
       response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
     when 'cancel_selection'
@@ -71,5 +79,10 @@ helpers do
 
   def elastic_search_client
     @elastic_search_client ||= ElasticsearchClient.new 'recipe'
+  end
+
+  def refri_col
+    firestore_client ||= Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
+    @refri_col = firestore_client.col 'refrigerator'
   end
 end
