@@ -7,7 +7,7 @@ Dotenv.load
 # 文字分割
 def strsplit(str)
   #.,;:/、。と全角半角スペースに対応
-  splited = str.split(/\.| |　|,|;|:|\/|、|。/)
+  splited = str.split(/\.| |　|,|;|:|\/|、|。|\r|\t|\n/)
   res = []
   #複数個の除去対象がある場合用("A,,B"->["A","","B"]->["A","B"])
   splited.each{|f| res << f if f!=""}
