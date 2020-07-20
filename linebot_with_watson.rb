@@ -40,7 +40,7 @@ def search_recipes(refri_col, input)
 
   message = {
     type: 'template',
-    altText: '楽天レシピからの画像です。',
+    altText: '楽天レシピからの画像だよ。',
     template: {
       type: 'carousel',
       columns: columns.uniq,
@@ -71,15 +71,15 @@ post '/callback' do
     # result[:mode]でどの問合せかを判断
     case result[:mode]
     when 'add_materials'
-      response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
+      response = '食材の追加だね。「たまねぎ ピーマン」みたいに追加する食材を入力してね。'
     when 'delete_materials'
-      response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
+      response = '食材の消去だね。「たまねぎ ピーマン」みたいに無くなった食材を入力してね。'
     when 'search_recipes'
       message = search_recipes(refri_col, result[:input] || -1)
     when 'list_materials'
       response = list_materials(refri_col)
     when 'cancel_selection'
-      response = 'やめるんだね。。。'
+      response = '入力をやめたよ。'
     end
 
     # result[:prev_mode]が存在する場合はユーザからその後のメッセージがあった場合
