@@ -17,11 +17,12 @@ def search_recipes_by_input(input)
 end
 
 def search_recipes(refri_col, input)
-  if input == -1
-    refri_list = get_all_grocery(refri_col)
+  inputs = input.split(' ', 2)[1]
+
+  refri_list = if inputs && !inputs.empty?
+    [inputs]
   else
-    refri_list = [input]
-    pp refri_list
+    get_all_grocery(refri_col)
   end
   recipes = elastic_search_client.search_by_materials(refri_list)
   columns = []
@@ -39,14 +40,21 @@ def search_recipes(refri_col, input)
     }
   end
 
-  message = {
-    type: 'template',
-    altText: '楽天レシピからの画像だよ。',
-    template: {
-      type: 'carousel',
-      columns: columns.uniq,
-    },
-  }
+  message = if columns.empty?
+              {
+                type: 'text',
+                text: "#{refri_list.join('と')}で検索したけどレシピが見つからなかったよ...",
+              }
+            else
+              {
+                type: 'template',
+                altText: '楽天レシピからの画像だよ。',
+                template: {
+                  type: 'carousel',
+                  columns: columns.uniq,
+                },
+              }
+            end
   message
 end
 
@@ -76,7 +84,7 @@ post '/callback' do
     when 'delete_materials'
       response = '食材の消去だね。「たまねぎ ピーマン」みたいに無くなった食材を入力してね。'
     when 'search_recipes'
-      message = search_recipes(refri_col, result[:input] || -1)
+      message = search_recipes(refri_col, result[:input])
     when 'list_materials'
       response = list_materials(refri_col)
     when 'cancel_selection'
