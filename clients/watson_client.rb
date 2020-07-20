@@ -1,7 +1,6 @@
 require 'google/cloud/firestore'
 require 'ibm_watson/authenticators'
 require 'ibm_watson/assistant_v2'
-Dotenv.load
 
 class WatsonClient
   def initialize(user_id:)

@@ -1,8 +1,4 @@
 require 'google/cloud/firestore'
-require 'sinatra'
-require 'json'
-require './elasticsearch_client'
-Dotenv.load
 
 # 文字分割
 def strsplit(str)

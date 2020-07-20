@@ -1,7 +1,5 @@
 require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
-require 'dotenv'
-Dotenv.load
 
 class ElasticsearchClient
   MAX_RECIPES_COUNT = 10
