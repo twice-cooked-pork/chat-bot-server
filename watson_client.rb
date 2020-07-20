@@ -25,6 +25,8 @@ class WatsonClient
   end
 
   def send_message(message)
+    message = message.split(/\n/).join(' ')
+
     begin
       response = @service.message(
         assistant_id: @assistant_id,
