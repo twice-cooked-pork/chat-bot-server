@@ -24,22 +24,26 @@ def search_recipes(refri_col, input)
   end
   recipes = elastic_search_client.search_by_materials(refri_list)
   columns = []
+
   recipes['hits']['hits'].each do |column|
     columns << {
-      "imageUrl": "#{column['_source']['foodImageUrl']}",
-      "action": {
-        "type": 'uri',
-        "label": 'レシピを見る',
-        "uri": "#{column['_source']['recipeUrl']}",
-      },
+      thumbnailImageUrl: "#{column['_source']['foodImageUrl']}",
+      title: "#{column['_source']['recipeTitle'][0, 40]}",
+      text: column['_source']['recipeDescription'][0, 60].to_s,
+      actions: [{
+        type: 'uri',
+        label: 'くわしく見る',
+        uri: "#{column['_source']['recipeUrl']}",
+      }],
     }
   end
+
   message = {
     type: 'template',
-    "altText": '楽天レシピからの画像です。',
-    "template": {
-      "type": 'image_carousel',
-      "columns": columns.uniq,
+    altText: '楽天レシピからの画像だよ。',
+    template: {
+      type: 'carousel',
+      columns: columns.uniq,
     },
   }
   message
@@ -67,15 +71,15 @@ post '/callback' do
     # result[:mode]でどの問合せかを判断
     case result[:mode]
     when 'add_materials'
-      response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
+      response = '食材の追加だね。「たまねぎ ピーマン」みたいに追加する食材を入力してね。'
     when 'delete_materials'
-      response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
+      response = '食材の消去だね。「たまねぎ ピーマン」みたいに無くなった食材を入力してね。'
     when 'search_recipes'
       message = search_recipes(refri_col, result[:input] || -1)
     when 'list_materials'
       response = list_materials(refri_col)
     when 'cancel_selection'
-      response = 'やめるんだね。。。'
+      response = '入力をやめたよ。'
     end
 
     # result[:prev_mode]が存在する場合はユーザからその後のメッセージがあった場合
@@ -93,6 +97,8 @@ post '/callback' do
       type: 'text',
       text: response,
     }
+    puts 'message:'
+    pp message
     line_client.reply_message(event['replyToken'], message)
   end
 
