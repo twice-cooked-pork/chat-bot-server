@@ -1,8 +1,9 @@
+require 'rubygems'
 require 'sinatra'
 require 'line/bot'
 require 'dotenv'
-require './func_refriDB'
 require 'google/cloud/firestore'
+require './func_refriDB'
 require './watson_client'
 
 Dotenv.load
