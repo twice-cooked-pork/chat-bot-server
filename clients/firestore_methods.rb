@@ -41,7 +41,7 @@ def make_groc_list(refri_list, num)
     if amount>=2 then
       res << refri_list[idx]
       num -= 1
-      if !num 
+      if !num
         break
       end
     else
