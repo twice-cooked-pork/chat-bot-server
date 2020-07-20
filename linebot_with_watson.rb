@@ -87,9 +87,9 @@ post '/callback' do
       # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       response = list_materials()
     when 'check_materials'
-      response = '今は愛の在庫が切れてるよ。買いに行ってね。'
+      response = '今は愛の在庫が切れているよ。買いに行ってね。'
     when 'cancel_selection'
-      response = '入力をやめるよ。'
+      response = '入力をやめたよ。'
     else
       response = "#{result[:text]}"
     end
