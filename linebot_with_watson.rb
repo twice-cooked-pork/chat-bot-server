@@ -24,22 +24,26 @@ def search_recipes(refri_col, input)
   end
   recipes = elastic_search_client.search_by_materials(refri_list)
   columns = []
+
   recipes['hits']['hits'].each do |column|
     columns << {
-      "imageUrl": "#{column['_source']['foodImageUrl']}",
-      "action": {
-        "type": 'uri',
-        "label": 'レシピを見る',
-        "uri": "#{column['_source']['recipeUrl']}",
-      },
+      thumbnailImageUrl: "#{column['_source']['foodImageUrl']}",
+      title: "#{column['_source']['recipeTitle'][0, 40]}",
+      text: column['_source']['recipeDescription'][0, 60].to_s,
+      actions: [{
+        type: 'uri',
+        label: 'くわしく見る',
+        uri: "#{column['_source']['recipeUrl']}",
+      }],
     }
   end
+
   message = {
     type: 'template',
-    "altText": '楽天レシピからの画像です。',
-    "template": {
-      "type": 'image_carousel',
-      "columns": columns.uniq,
+    altText: '楽天レシピからの画像です。',
+    template: {
+      type: 'carousel',
+      columns: columns.uniq,
     },
   }
   message
@@ -93,6 +97,8 @@ post '/callback' do
       type: 'text',
       text: response,
     }
+    puts 'message:'
+    pp message
     line_client.reply_message(event['replyToken'], message)
   end
 
