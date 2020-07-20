@@ -41,7 +41,7 @@ def search_recipes(input = -1)
   end
   message = {
     type: 'template',
-    "altText": '楽天レシピからの画像です。',
+    "altText": '楽天レシピからの画像だよ。',
     "template": {
       "type": 'image_carousel',
       "columns": columns.uniq,
@@ -71,14 +71,14 @@ post '/callback' do
     # result[:input]が存在する場合はユーザからその後のメッセージがあった場合
     case result[:mode]
     when 'add_materials'
-      response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
+      response = '食材の追加だね。「たまねぎ ピーマン」みたいに追加する食材を入力してね。'
       response = add_materials(result[:input]) if result[:input]
     when 'delete_materials'
-      response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
+      response = '食材の消去だね。「たまねぎ ピーマン」みたいに無くなった食材を入力してね。'
       # response = delete_materials(result[:input]) if result[:input]
       if result[:input]
         erase_from_refri(result[:input], refri_col)
-        response = "#{input}を削除するね"
+        response = "#{input}を削除したよ。"
       end
     when 'search_recipes'
       message = search_recipes
@@ -87,9 +87,9 @@ post '/callback' do
       # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       response = list_materials()
     when 'check_materials'
-      response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
+      response = '今は愛の在庫が切れてるよ。買いに行ってね。'
     when 'cancel_selection'
-      response = 'やめるんだね。。。'
+      response = '入力をやめるよ。'
     else
       response = "#{result[:text]}"
     end
