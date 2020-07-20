@@ -44,7 +44,7 @@ class GetRakutenRecipes
 
   #return hash
   def load_categories
-    File.open('libs/categoryList.json') do |j|
+    File.open('categoryList.json') do |j|
       category_list = JSON.load(j)
       category_list['result']
     end
