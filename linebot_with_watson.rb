@@ -24,17 +24,17 @@ def search_recipes(refri_col, input)
                else
                  get_all_grocery(refri_col)
                end
+
   if refri_list.empty?
     return {
       type: 'text',
       text: '冷蔵庫が空だよ!今すぐ買いに行こう!'
     }
   end
-  recipes = elastic_search_client.search_by_materials(refri_list)
-  columns = []
 
-  recipes['hits']['hits'].each do |column|
-    columns << {
+  recipes = elastic_search_client.search_by_materials(refri_list)
+  columns = recipes['hits']['hits'].map do |column|
+    {
       thumbnailImageUrl: "#{column['_source']['foodImageUrl']}",
       title: "#{column['_source']['recipeTitle'][0, 40]}",
       text: column['_source']['recipeDescription'][0, 60].to_s,
@@ -46,22 +46,21 @@ def search_recipes(refri_col, input)
     }
   end
 
-  message = if columns.empty?
-              {
-                type: 'text',
-                text: "#{refri_list.join('と')}で検索したけどレシピが見つからなかったよ...",
-              }
-            else
-              {
-                type: 'template',
-                altText: '楽天レシピからの画像だよ。',
-                template: {
-                  type: 'carousel',
-                  columns: columns.uniq,
-                },
-              }
-            end
-  message
+  if columns.empty?
+    return {
+      type: 'text',
+      text: "#{refri_list.join('と')}で検索したけどレシピが見つからなかったよ...",
+    }
+  end
+
+  return {
+    type: 'template',
+    altText: '楽天レシピからの画像だよ。',
+    template: {
+      type: 'carousel',
+      columns: columns.uniq,
+    },
+  }
 end
 
 def list_materials(refri_col)
