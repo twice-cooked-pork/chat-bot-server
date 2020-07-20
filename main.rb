@@ -74,24 +74,32 @@ helpers do
     @refri_col ||= firestore_client.col user_id
   end
 
-  def search_recipes(refri_col, input)
-    inputs = input.split(' ', 2)[1]
+  def search_recipes(input)
+    search_input = input.split(' ', 2)[1]
 
-    refri_list = if inputs && !inputs.empty?
-                  [inputs]
+    materials = if search_input && !search_input.empty?
+                  strsplit(search_input)
                 else
                   get_all_grocery(refri_col)
                 end
 
-    if refri_list.empty?
+    if materials.empty?
       return {
         type: 'text',
         text: '冷蔵庫が空だよ!今すぐ買いに行こう!'
       }
     end
 
-    recipes = elastic_search_client.search_by_materials(refri_list)
-    columns = recipes['hits']['hits'].map do |column|
+    recipes = elastic_search_client.search_by_materials(materials)['hits']['hits']
+
+    if recipes.empty?
+      return {
+        type: 'text',
+        text: "#{materials.join('と')}で検索したけどレシピが見つからなかったよ...",
+      }
+    end
+
+    columns = recipes.map do |column|
       {
         thumbnailImageUrl: "#{column['_source']['foodImageUrl']}",
         title: "#{column['_source']['recipeTitle'][0, 40]}",
@@ -101,13 +109,6 @@ helpers do
           label: 'くわしく見る',
           uri: "#{column['_source']['recipeUrl']}",
         }],
-      }
-    end
-
-    if columns.empty?
-      return {
-        type: 'text',
-        text: "#{refri_list.join('と')}で検索したけどレシピが見つからなかったよ...",
       }
     end
 

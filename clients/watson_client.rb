@@ -51,10 +51,7 @@ class WatsonClient
   end
 
   def store_session_id
-    session_id = @service.create_session(
-      assistant_id: @assistant_id,
-    ).result['session_id']
-
+    session_id = @service.create_session(assistant_id: @assistant_id).result['session_id']
     @session_doc.set(session_id: session_id)
   end
 end
