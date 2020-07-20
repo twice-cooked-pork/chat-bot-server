@@ -65,32 +65,28 @@ post '/callback' do
     refri_col = set_refri_col(user_id: user_id)
 
     # result[:mode]でどの問合せかを判断
-    # result[:input]が存在する場合はユーザからその後のメッセージがあった場合
     case result[:mode]
     when 'add_materials'
       response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
-      if result[:input]
-        add_to_refri(result[:input], refri_col)
-        response = "#{result[:input]}を追加するね"
-      end
     when 'delete_materials'
       response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
-      # response = delete_materials(result[:input]) if result[:input]
-      if result[:input]
-        erase_from_refri(result[:input], refri_col)
-        response = "#{result[:input]}を削除するね"
-      end
     when 'search_recipes'
       message = search_recipes(refri_col, result[:input] || -1)
     when 'list_materials'
-      # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       response = list_materials(refri_col)
-    when 'check_materials'
-      response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
     when 'cancel_selection'
       response = 'やめるんだね。。。'
-    else
-      response = "#{result[:text]}"
+    end
+
+    # result[:prev_mode]が存在する場合はユーザからその後のメッセージがあった場合
+    # result[:input]でユーザ入力を見る
+    case result[:prev_mode]
+    when 'add_materials'
+      add_to_refri(result[:input], refri_col)
+      response = "#{result[:input]}を追加するね"
+    when 'delete_materials'
+      erase_from_refri(result[:input], refri_col)
+      response = "#{result[:input]}を削除するね"
     end
 
     message ||= {
