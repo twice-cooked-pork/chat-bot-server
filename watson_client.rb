@@ -37,10 +37,19 @@ class WatsonClient
       retry
     end
 
+    pp response
+
     option_item = response.result['output']['generic'].find { |gen| gen['response_type'] == 'option' }
-    result = option_item['options']&.map do |opt|
-      [opt['label'].to_sym, opt['value']['input']['text']]
-    end
+    text_item = response.result['output']['generic'].find { |gen| gen['response_type'] == 'text' }
+
+    result = if option_item
+        option_item['options']&.map do |opt|
+          [opt['label'].to_sym, opt['value']['input']['text']]
+        end
+      else
+        []
+      end
+    result.push([:text, text_item['text']]) if text_item
 
     result.to_h
   end

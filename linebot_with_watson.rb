@@ -44,7 +44,7 @@ def search_recipes(input = -1)
     "altText": '楽天レシピからの画像です。',
     "template": {
       "type": 'image_carousel',
-      "columns": columns,
+      "columns": columns.uniq,
     },
   }
   message
@@ -75,7 +75,11 @@ post '/callback' do
       response = add_materials(result[:input]) if result[:input]
     when 'delete_materials'
       response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
-      response = delete_materials(result[:input]) if result[:input]
+      # response = delete_materials(result[:input]) if result[:input]
+      if result[:input]
+        erase_from_refri(result[:input], refri_col)
+        response = "#{input}を削除するね"
+      end
     when 'search_recipes'
       message = search_recipes
       message = search_recipes(result[:input]) if result[:input]
@@ -86,6 +90,8 @@ post '/callback' do
       response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
     when 'cancel_selection'
       response = 'やめるんだね。。。'
+    else
+      response = "#{result[:text]}"
     end
 
     message ||= {
