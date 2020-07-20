@@ -20,31 +20,30 @@ def search_recipes_by_input(input)
   "#{input}で検索するね"
 end
 
-def search_recipes(input = -1)
-  if input == -1
-    refri_list = get_all_grocery(refri_col)
-  else
-    refri_list = [input]
-    pp refri_list
-  end
+def search_recipes()
+  refri_list = get_all_grocery(refri_col)
   recipes = client.search_by_materials(refri_list)
   columns = []
+
   recipes['hits']['hits'].each do |column|
     columns << {
-      "imageUrl": "#{column['_source']['foodImageUrl']}",
-      "action": {
-        "type": 'uri',
-        "label": 'レシピを見る',
-        "uri": "#{column['_source']['recipeUrl']}",
-      },
+      thumbnailImageUrl: "#{column['_source']['foodImageUrl']}",
+      title: "#{column['_source']['recipeTitle'][0, 40]}",
+      text: column['_source']['recipeDescription'][0, 60].to_s,
+      actions: [{
+        type: 'uri',
+        label: 'くわしく見る',
+        uri: "#{column['_source']['recipeUrl']}",
+      }],
     }
   end
+
   message = {
     type: 'template',
-    "altText": '楽天レシピからの画像です。',
-    "template": {
-      "type": 'image_carousel',
-      "columns": columns.uniq,
+    altText: '楽天レシピからの画像です。',
+    template: {
+      type: 'carousel',
+      columns: columns.uniq,
     },
   }
   message
@@ -69,6 +68,7 @@ post '/callback' do
 
     # result[:mode]でどの問合せかを判断
     # result[:input]が存在する場合はユーザからその後のメッセージがあった場合
+    puts "mode:#{result[:mode]}"
     case result[:mode]
     when 'add_materials'
       response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
@@ -81,8 +81,7 @@ post '/callback' do
         response = "#{input}を削除するね"
       end
     when 'search_recipes'
-      message = search_recipes
-      message = search_recipes(result[:input]) if result[:input]
+      message = search_recipes()
     when 'list_materials'
       # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       response = list_materials()
@@ -98,6 +97,8 @@ post '/callback' do
       type: 'text',
       text: response,
     }
+    puts 'message:'
+    pp message
     line_client.reply_message(event['replyToken'], message)
   end
 
