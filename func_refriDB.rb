@@ -17,7 +17,6 @@ end
 # 冷蔵庫にしまう
 def add_to_refri(shopping_bag, refri_col)
   grocery = strsplit(shopping_bag)
-
   grocery.each{|food| refri_col.doc(food).set(name:food)}
 end
 
@@ -102,21 +101,4 @@ def check_from_refri(input_list, refri_col)
   }
 
   return res
-end
-
-firestore = Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
-refri_col = firestore.col "refrigerator"
-shopping_bag = "たまご ,    　にんじん トマト,りんご:玉ねぎ;小麦粉/米、もち。白玉" #例文
-
-get '/' do
-  # 材料について牛乳でOR検索した結果を返す
-  groc = get_from_refri(input_list, refri_col)
-
-  if groc.size == 3
-    result = client.search_by_materials([groc[1]])
-  elsif groc.size == 2
-    result = client.search_by_materials([groc[1],groc[2]])
-  end
-
-  result['hits']['hits']['recipeMaterial'].to_json
 end

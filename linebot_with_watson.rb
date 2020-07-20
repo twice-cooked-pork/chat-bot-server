@@ -7,11 +7,6 @@ require './watson_client'
 
 Dotenv.load
 
-def add_materials(input)
-  add_to_refri(input, refri_col)
-  "#{input}を追加するね"
-end
-
 def delete_materials(input)
   "#{input}を削除するね"
 end
@@ -20,14 +15,14 @@ def search_recipes_by_input(input)
   "#{input}で検索するね"
 end
 
-def search_recipes(input = -1)
+def search_recipes(refri_col, input)
   if input == -1
     refri_list = get_all_grocery(refri_col)
   else
     refri_list = [input]
     pp refri_list
   end
-  recipes = client.search_by_materials(refri_list)
+  recipes = elastic_search_client.search_by_materials(refri_list)
   columns = []
   recipes['hits']['hits'].each do |column|
     columns << {
@@ -50,7 +45,7 @@ def search_recipes(input = -1)
   message
 end
 
-def list_materials()
+def list_materials(refri_col)
   "今の冷蔵庫の中はこれだよ\n\n#{get_all_grocery(refri_col).join("\n")}"
 end
 
@@ -65,27 +60,31 @@ post '/callback' do
     next unless event.is_a?(Line::Bot::Event::Message)
     next unless event.type == Line::Bot::Event::MessageType::Text
 
-    result = WatsonClient.new(user_id: event['source']['userId']).send_message(event.message['text'])
+    user_id = event['source']['userId']
+    result = WatsonClient.new(user_id: user_id).send_message(event.message['text'])
+    refri_col = set_refri_col(user_id: user_id)
 
     # result[:mode]でどの問合せかを判断
     # result[:input]が存在する場合はユーザからその後のメッセージがあった場合
     case result[:mode]
     when 'add_materials'
       response = '食材の追加だね。「たまねぎ ピーマン」みたいに入力してね'
-      response = add_materials(result[:input]) if result[:input]
+      if result[:input]
+        add_to_refri(result[:input], refri_col)
+        response = "#{result[:input]}を追加するね"
+      end
     when 'delete_materials'
       response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       # response = delete_materials(result[:input]) if result[:input]
       if result[:input]
         erase_from_refri(result[:input], refri_col)
-        response = "#{input}を削除するね"
+        response = "#{result[:input]}を削除するね"
       end
     when 'search_recipes'
-      message = search_recipes
-      message = search_recipes(result[:input]) if result[:input]
+      message = search_recipes(refri_col, result[:input] || -1)
     when 'list_materials'
       # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
-      response = list_materials()
+      response = list_materials(refri_col)
     when 'check_materials'
       response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
     when 'cancel_selection'
@@ -117,8 +116,8 @@ helpers do
     @elastic_search_client ||= ElasticsearchClient.new 'recipe'
   end
 
-  def refri_col
-    firestore_client ||= Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
-    @refri_col = firestore_client.col 'refrigerator'
+  def set_refri_col(user_id:)
+    firestore_client = Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
+    @refri_col ||= firestore_client.col user_id
   end
 end

@@ -37,8 +37,6 @@ class WatsonClient
       retry
     end
 
-    pp response
-
     option_item = response.result['output']['generic'].find { |gen| gen['response_type'] == 'option' }
     text_item = response.result['output']['generic'].find { |gen| gen['response_type'] == 'text' }
 
