@@ -6,6 +6,7 @@ git_source(:github) do |repo_name|
 end
 
 gem 'sinatra'
+gem 'thin'
 gem 'google-cloud-firestore'
 gem 'elasticsearch'
 gem 'faraday_middleware-aws-sigv4'

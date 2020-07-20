@@ -1,8 +1,9 @@
+require 'rubygems'
 require 'sinatra'
 require 'line/bot'
 require 'dotenv'
-require './func_refriDB'
 require 'google/cloud/firestore'
+require './func_refriDB'
 require './watson_client'
 
 Dotenv.load
@@ -16,17 +17,24 @@ def search_recipes_by_input(input)
 end
 
 def search_recipes(refri_col, input)
-  if input == -1
-    refri_list = get_all_grocery(refri_col)
-  else
-    refri_list = [input]
-    pp refri_list
-  end
-  recipes = elastic_search_client.search_by_materials(refri_list)
-  columns = []
+  inputs = input.split(' ', 2)[1]
 
-  recipes['hits']['hits'].each do |column|
-    columns << {
+  refri_list = if inputs && !inputs.empty?
+                 [inputs]
+               else
+                 get_all_grocery(refri_col)
+               end
+
+  if refri_list.empty?
+    return {
+      type: 'text',
+      text: '冷蔵庫が空だよ!今すぐ買いに行こう!'
+    }
+  end
+
+  recipes = elastic_search_client.search_by_materials(refri_list)
+  columns = recipes['hits']['hits'].map do |column|
+    {
       thumbnailImageUrl: "#{column['_source']['foodImageUrl']}",
       title: "#{column['_source']['recipeTitle'][0, 40]}",
       text: column['_source']['recipeDescription'][0, 60].to_s,
@@ -38,7 +46,14 @@ def search_recipes(refri_col, input)
     }
   end
 
-  message = {
+  if columns.empty?
+    return {
+      type: 'text',
+      text: "#{refri_list.join('と')}で検索したけどレシピが見つからなかったよ...",
+    }
+  end
+
+  return {
     type: 'template',
     altText: '楽天レシピからの画像だよ。',
     template: {
@@ -46,7 +61,6 @@ def search_recipes(refri_col, input)
       columns: columns.uniq,
     },
   }
-  message
 end
 
 def list_materials(refri_col)
@@ -75,7 +89,7 @@ post '/callback' do
     when 'delete_materials'
       response = '食材の消去だね。「たまねぎ ピーマン」みたいに無くなった食材を入力してね。'
     when 'search_recipes'
-      message = search_recipes(refri_col, result[:input] || -1)
+      message = search_recipes(refri_col, result[:input])
     when 'list_materials'
       response = list_materials(refri_col)
     when 'cancel_selection'
