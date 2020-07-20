@@ -2,7 +2,7 @@ require 'sinatra'
 require 'line/bot'
 require 'dotenv'
 require './func_refriDB'
-require "google/cloud/firestore"
+require 'google/cloud/firestore'
 require './watson_client'
 
 Dotenv.load
@@ -16,8 +16,38 @@ def delete_materials(input)
   "#{input}を削除するね"
 end
 
-def search_recipes(input)
+def search_recipes_by_input(input)
   "#{input}で検索するね"
+end
+
+def search_recipes(input = -1)
+  if input == -1
+    refri_list = get_all_grocery(refri_col)
+  else
+    refri_list = [input]
+    pp refri_list
+  end
+  recipes = client.search_by_materials(refri_list)
+  columns = []
+  recipes['hits']['hits'].each do |column|
+    columns << {
+      "imageUrl": "#{column['_source']['foodImageUrl']}",
+      "action": {
+        "type": 'uri',
+        "label": 'レシピを見る',
+        "uri": "#{column['_source']['recipeUrl']}",
+      },
+    }
+  end
+  message = {
+    type: 'template',
+    "altText": '楽天レシピからの画像です。',
+    "template": {
+      "type": 'image_carousel',
+      "columns": columns.uniq,
+    },
+  }
+  message
 end
 
 def list_materials()
@@ -45,10 +75,14 @@ post '/callback' do
       response = add_materials(result[:input]) if result[:input]
     when 'delete_materials'
       response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
-      response = delete_materials(result[:input]) if result[:input]
+      # response = delete_materials(result[:input]) if result[:input]
+      if result[:input]
+        erase_from_refri(result[:input], refri_col)
+        response = "#{input}を削除するね"
+      end
     when 'search_recipes'
-      response = '今日のレシピは回鍋肉にしよう'
-      response = search_materials(result[:input]) if result[:input]
+      message = search_recipes
+      message = search_recipes(result[:input]) if result[:input]
     when 'list_materials'
       # response = 'どの食材が無くなったんだい。「たまねぎ」みたいに食材を入力してね'
       response = list_materials()
@@ -56,11 +90,13 @@ post '/callback' do
       response = '今は愛の在庫が切れてるよ。買いに行かなくちゃ。'
     when 'cancel_selection'
       response = 'やめるんだね。。。'
+    else
+      response = "#{result[:text]}"
     end
 
-    message = {
+    message ||= {
       type: 'text',
-      text: response
+      text: response,
     }
     line_client.reply_message(event['replyToken'], message)
   end
