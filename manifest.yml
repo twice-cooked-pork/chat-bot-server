@@ -2,4 +2,4 @@ applications:
 - name: Refrisuggester
   random-route: true
   memory: 256M
-  command: ruby main.rb
+  command: bundle exec thin -R config.ru -p $PORT start

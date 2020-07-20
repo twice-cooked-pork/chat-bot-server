@@ -20,9 +20,15 @@ def search_recipes(refri_col, input)
   inputs = input.split(' ', 2)[1]
 
   refri_list = if inputs && !inputs.empty?
-    [inputs]
-  else
-    get_all_grocery(refri_col)
+                 [inputs]
+               else
+                 get_all_grocery(refri_col)
+               end
+  if refri_list.empty?
+    return {
+      type: 'text',
+      text: '冷蔵庫が空だよ!今すぐ買いに行こう!'
+    }
   end
   recipes = elastic_search_client.search_by_materials(refri_list)
   columns = []
