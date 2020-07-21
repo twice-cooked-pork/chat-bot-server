@@ -1,8 +1,7 @@
 require 'rubygems'
 require 'sinatra'
 require 'line/bot'
-require 'google/cloud/firestore'
-require './clients/firestore_methods'
+require './clients/refrigerator'
 require './clients/watson_client'
 
 post '/callback' do
@@ -18,7 +17,6 @@ post '/callback' do
 
     user_id = event['source']['userId']
     result = WatsonClient.new(user_id: user_id).send_message(event.message['text'])
-    refri_col = set_refri_col(user_id: user_id)
 
     # result[:mode]でどの問合せかを判断
     case result[:mode]
@@ -27,22 +25,24 @@ post '/callback' do
     when 'delete_materials'
       response = '食材の消去だね。「たまねぎ ピーマン」みたいに無くなった食材を入力してね。'
     when 'search_recipes'
-      message = search_recipes(refri_col, result[:input])
+      message = search_recipes(parse_input(result[:input]))
     when 'list_materials'
-      response = "今の冷蔵庫の中はこれだよ\n\n#{get_all_grocery(refri_col).join("\n")}"
+      response = "今の冷蔵庫の中はこれだよ\n\n#{refrigerator.all_materials.join("\n")}"
     when 'cancel_selection'
-      response = '入力をやめたよ。'
+      response = '入力をやめるよ。'
     end
 
     # result[:prev_mode]が存在する場合はユーザからその後のメッセージがあった場合
     # result[:input]でユーザ入力を見る
     case result[:prev_mode]
     when 'add_materials'
-      add_to_refri(result[:input], refri_col)
-      response = "#{result[:input]}を追加するね"
+      materials = parse_input(result[:input])
+      refrigerator.add_materials(materials)
+      response = "#{materials.join('、')}を追加したよ"
     when 'delete_materials'
-      erase_from_refri(result[:input], refri_col)
-      response = "#{result[:input]}を削除するね"
+      materials = parse_input(result[:input])
+      refrigerator.delete_materials(materials)
+      response = "#{materials.join('、')}を削除したよ"
     end
 
     message ||= {
@@ -57,6 +57,10 @@ post '/callback' do
 end
 
 helpers do
+  def parse_input(input)
+    input.split(%r{\.| |　|,|;|:|/|、|。|\r|\t|\n}).compact
+  end
+
   def line_client
     @line_client ||= Line::Bot::Client.new do |config|
       config.channel_id = ENV.fetch('LINE_CHANNEL_ID')
@@ -65,24 +69,14 @@ helpers do
     end
   end
 
-  def elastic_search_client
-    @elastic_search_client ||= ElasticsearchClient.new 'recipe'
-  end
-
-  def set_refri_col(user_id:)
-    firestore_client = Google::Cloud::Firestore.new project_id: ENV['GOOGLE_PROJECT_ID']
-    @refri_col ||= firestore_client.col user_id
+  def refrigerator
+    @refrigerator ||= Refrigerator.new(user_id: user_id)
   end
 
   def search_recipes(input)
-    search_input = input.split(' ', 2)[1]
-
-    materials = if search_input && !search_input.empty?
-                  strsplit(search_input)
-                else
-                  get_all_grocery(refri_col)
-                end
-
+    # e.g. 'レシピ hoge fuga' -> 'hoge fuga'
+    materials = parse_input(input.split(' ', 2)[1])
+    materials = refrigerator.all_materials if materials.empty?
     if materials.empty?
       return {
         type: 'text',
@@ -90,12 +84,11 @@ helpers do
       }
     end
 
-    recipes = elastic_search_client.search_by_materials(materials)['hits']['hits']
-
+    recipes = ElasticsearchClient.new('recipe').search_by_materials(materials)['hits']['hits']
     if recipes.empty?
       return {
         type: 'text',
-        text: "#{materials.join('と')}で検索したけどレシピが見つからなかったよ...",
+        text: "#{materials.join('、')}で検索したけどレシピが見つからなかったよ...",
       }
     end
 
@@ -112,9 +105,9 @@ helpers do
       }
     end
 
-    return {
+    {
       type: 'template',
-      altText: '楽天レシピからの画像だよ。',
+      altText: '楽天レシピから検索したよ。',
       template: {
         type: 'carousel',
         columns: columns.uniq,
