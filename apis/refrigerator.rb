@@ -25,6 +25,7 @@ class Refrigerator
   end
 
   # 指定した食材名のうち, 冷蔵庫に存在しないものを返す
+  # TODO: Rename
   def not_exists_materials(materials)
     materials.select do |material|
       @refrigerator.where('name', '=', material).get.map { |mat| mat.data[:name] }.empty?

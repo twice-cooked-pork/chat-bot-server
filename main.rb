@@ -1,8 +1,8 @@
 require 'rubygems'
 require 'sinatra'
 require 'line/bot'
-require './clients/refrigerator'
-require './clients/watson_client'
+require './apis/refrigerator'
+require './apis/watson_client'
 
 post '/callback' do
   body = request.body.read

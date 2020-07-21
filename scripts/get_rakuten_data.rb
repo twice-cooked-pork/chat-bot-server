@@ -53,10 +53,12 @@ class GetRakutenRecipes
   #return hash
   def make_ids_hash(categories)
     # 全て入れると無料枠を突破しそうなので
-    large_categories = categories['large'].sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'] || 1)
+    large_categories = categories['large'].reject { |cat| %w[10 18 25 44 47 35 39 14 43 21 40 34 24 37 15 13 51].include? cat['categoryId'] }.sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'].to_i)
     medium_categories = categories['medium']
     small_categories = categories['small']
     ids_hash = {}
+
+    p large_categories.map { |cat| cat['categoryId'] }
 
     large_categories.each do |large_category|
       large_id = large_category['categoryId'].to_i
