@@ -1,7 +1,5 @@
 require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
-require 'dotenv'
-Dotenv.load
 
 class ElasticsearchClient
   MAX_RECIPES_COUNT = 10
@@ -28,11 +26,11 @@ class ElasticsearchClient
     end
   end
 
-  def get_all
+  def all_recipes
     @client.search(index: @index, size: MAX_RECIPES_COUNT, body: nil)
   end
 
-  def get_by_id(id)
+  def recipe(id)
     @client.get(index: @index, id: id)
   end
 

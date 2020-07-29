@@ -1,10 +1,10 @@
-# チャットボットサーバ (仮)
-
-Sinatra使ってます
+# チャットボットサーバ
 
 ##  セットアップ
 
 ```shell
+# 管理者から環境変数ファイルを受け取る
+$ source .env
 $ bundle install
-$ ruby main.rb
+$ bundle exec thin -R config.ru -p 4567 start
 ```

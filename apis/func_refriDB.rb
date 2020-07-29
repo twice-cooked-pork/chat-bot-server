@@ -1,8 +1,4 @@
 require 'google/cloud/firestore'
-require 'sinatra'
-require 'json'
-require './elasticsearch_client'
-Dotenv.load
 
 # 文字分割
 def strsplit(str)
@@ -45,7 +41,7 @@ def make_groc_list(refri_list, num)
     if amount>=2 then
       res << refri_list[idx]
       num -= 1
-      if !num 
+      if !num
         break
       end
     else

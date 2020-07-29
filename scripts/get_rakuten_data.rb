@@ -2,20 +2,18 @@ require 'net/http'
 require 'json'
 require 'elasticsearch'
 require 'faraday_middleware/aws_sigv4'
-require 'dotenv'
-Dotenv.load
 
-class Get_rakuten_data
+class GetRakutenRecipes
   DEBUG = true
-  Sleep_time = 0.3
-  Application_ID = '1038057614600903965'
+  SLEEP_TIME = 0.3
+  APPLICATION_ID = '1038057614600903965'
 
   #return : array
   def get_recipes_by_category_id(category_id)
-    uri_str = "https://app.rakuten.co.jp/services/api/Recipe/CategoryRanking/20170426?applicationId=#{Application_ID}&formatVersion=2&categoryId=#{category_id}"
+    uri_str = "https://app.rakuten.co.jp/services/api/Recipe/CategoryRanking/20170426?applicationId=#{APPLICATION_ID}&formatVersion=2&categoryId=#{category_id}"
     uri = URI.parse(uri_str)
     response = Net::HTTP.get_response(uri)
-    sleep Sleep_time
+    sleep SLEEP_TIME
     rawdata = JSON.parse(response.body)
     if rawdata['error'].nil?
       data = rawdata['result']
@@ -55,10 +53,12 @@ class Get_rakuten_data
   #return hash
   def make_ids_hash(categories)
     # 全て入れると無料枠を突破しそうなので
-    large_categories = categories['large'].sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'] || 1)
+    large_categories = categories['large'].reject { |cat| %w[10 18 25 44 47 35 39 14 43 21 40 34 24 37 15 13 51].include? cat['categoryId'] }.sample(ENV['RAKUTEN_MAX_RECIPES_COUNT'].to_i)
     medium_categories = categories['medium']
     small_categories = categories['small']
     ids_hash = {}
+
+    p large_categories.map { |cat| cat['categoryId'] }
 
     large_categories.each do |large_category|
       large_id = large_category['categoryId'].to_i
@@ -84,8 +84,8 @@ class Get_rakuten_data
   end
 end
 
-if __FILE__ == $0
-  grd = Get_rakuten_data.new
+if __FILE__ == $PROGRAM_NAME
+  grd = GetRakutenRecipes.new
   categories = grd.load_categories
   ids_hash = grd.make_ids_hash(categories)
   recipes = grd.get_all_recipes(ids_hash)

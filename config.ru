@@ -1,5 +1,5 @@
 require 'rubygems'
 require 'sinatra'
 
-require './linebot_with_watson.rb'
+require './main.rb'
 run Sinatra::Application
